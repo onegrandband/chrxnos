@@ -30,9 +30,9 @@ interface RemindersViewProps {
 }
 
 const TONE_OPTIONS: SelectOption<SoundTone>[] = [
+  { value: 'digital-beep', label: 'Classic Digital Beep' },
   { value: 'zen-chime', label: 'Zen Harmonic Bell (528Hz)' },
   { value: 'marimba', label: 'Acoustic Marimba' },
-  { value: 'digital-beep', label: 'Digital Beep' },
   { value: 'singing-bowl', label: 'Tibetan Singing Bowl' },
   { value: 'pulse', label: 'Subtle Pulse' },
 ];
@@ -53,7 +53,7 @@ export const RemindersView: React.FC<RemindersViewProps> = ({
   const [remindMode, setRemindMode] = useState<'duration' | 'target-time'>('duration');
   const [durationMinutes, setDurationMinutes] = useState(15);
   const [targetTimeStr, setTargetTimeStr] = useState('16:00');
-  const [soundTone, setSoundTone] = useState<SoundTone>('zen-chime');
+  const [soundTone, setSoundTone] = useState<SoundTone>('digital-beep');
 
   const activeReminders = reminders.filter((r) => r.isEnabled && !r.triggered);
 

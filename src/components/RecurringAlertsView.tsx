@@ -48,9 +48,9 @@ const CATEGORY_OPTIONS: SelectOption<RecurringAlert['category']>[] = [
 ];
 
 const TONE_OPTIONS: SelectOption<SoundTone>[] = [
-  { value: 'marimba', label: 'Acoustic Marimba' },
+  { value: 'digital-beep', label: 'Classic Digital Beep' },
   { value: 'zen-chime', label: 'Zen Harmonic Bell' },
-  { value: 'digital-beep', label: 'Digital Beep' },
+  { value: 'marimba', label: 'Acoustic Marimba' },
   { value: 'singing-bowl', label: 'Tibetan Singing Bowl' },
   { value: 'pulse', label: 'Subtle Pulse' },
 ];
@@ -70,7 +70,7 @@ export const RecurringAlertsView: React.FC<RecurringAlertsViewProps> = ({
   const [description, setDescription] = useState('');
   const [intervalMinutes, setIntervalMinutes] = useState(30);
   const [category, setCategory] = useState<RecurringAlert['category']>('hydration');
-  const [soundTone, setSoundTone] = useState<SoundTone>('marimba');
+  const [soundTone, setSoundTone] = useState<SoundTone>('digital-beep');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

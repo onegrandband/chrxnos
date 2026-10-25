@@ -124,7 +124,7 @@ export default function App() {
     return {
       volume: 0.8,
       isMuted: false,
-      defaultSoundTone: 'zen-chime',
+      defaultSoundTone: 'digital-beep',
       browserNotificationsEnabled:
         typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted',
     };

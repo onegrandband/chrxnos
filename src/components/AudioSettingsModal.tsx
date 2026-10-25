@@ -21,9 +21,9 @@ interface AudioSettingsModalProps {
 }
 
 const TONES: { id: SoundTone; label: string; desc: string }[] = [
+  { id: 'digital-beep', label: 'Classic Digital Beep (Default)', desc: 'Crisp high-frequency dual alert' },
   { id: 'zen-chime', label: 'Zen Harmonic Bell', desc: '528Hz healing chord with exponential decay' },
   { id: 'marimba', label: 'Acoustic Marimba', desc: 'Warm 4-note ascending wooden arpeggio' },
-  { id: 'digital-beep', label: 'Classic Digital Beep', desc: 'Crisp high-frequency dual alert' },
   { id: 'singing-bowl', label: 'Tibetan Singing Bowl', desc: 'Deep binaural resonance with slow beating' },
   { id: 'pulse', label: 'Subtle Pulse', desc: 'Low-profile gentle double tap' },
 ];

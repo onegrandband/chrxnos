@@ -33,9 +33,9 @@ const PRESETS = [
 ];
 
 const TONE_OPTIONS: SelectOption<SoundTone>[] = [
+  { value: 'digital-beep', label: 'Classic Digital Beep' },
   { value: 'zen-chime', label: 'Zen Harmonic Bell (528Hz)' },
   { value: 'marimba', label: 'Acoustic Marimba Arpeggio' },
-  { value: 'digital-beep', label: 'Crisp Digital Beep' },
   { value: 'singing-bowl', label: 'Tibetan Singing Bowl' },
   { value: 'pulse', label: 'Subtle Pulse' },
 ];

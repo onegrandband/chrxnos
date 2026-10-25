@@ -18,7 +18,7 @@ function getAudioContext(): AudioContext | null {
   return audioCtx;
 }
 
-export function playTone(tone: SoundTone = 'zen-chime', volume: number = 0.8, isMuted: boolean = false) {
+export function playTone(tone: SoundTone = 'digital-beep', volume: number = 0.8, isMuted: boolean = false) {
   if (isMuted || volume <= 0) return;
 
   try {

@@ -1,0 +1,7 @@
+{
+  "name": "Chronos — Minimalist Timers, Stopwatch & Recurring Alerts",
+  "description": "Precision custom timers, stopwatch with milestone reminders, and recurring cadence notification alerts with a minimalist dark mode interface.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+

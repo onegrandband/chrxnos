@@ -12,16 +12,29 @@ export const TIMER_MESSAGES = [
 ];
 
 export const STOPWATCH_MESSAGES = [
-  "Milestone reached! You're cruising with exceptional pace and stamina.",
-  "Checkpoint achieved! Steady pacing wins the entire distance.",
-  "Clock alert: You've surpassed another benchmark—keep the rhythm going!",
-  "Boom! Another split milestone locked down. Consistent and focused.",
-  "Pacing reminder: You're right on target. Hold that steady cadence!",
-  "Splits looking sharp! You've officially crossed into prime time.",
-  "Checkpoint alert: Precision timing on point. Keep tracking strong.",
-  "Target time touched down! Power and consistency shining through.",
-  "Milestone unlocked! The stopwatch is proud of your relentless tempo.",
-  "Time check passed! Excellent discipline—pushing the boundaries today.",
+  "Stopwatch lap captured! You're cruising with exceptional pace and stamina.",
+  "Stopwatch split marked! Steady pacing wins the entire distance.",
+  "Precision split recorded—keep the rhythm going!",
+  "Split locked down! Consistent, focused, and steady.",
+  "Clock check: Pacing looking sharp on this split.",
+  "Lap logged! Timing on point.",
+  "Split captured: Relentless tempo in action.",
+  "Timing confirmed! Precision data recorded.",
+  "Lap split tracked! High performance output.",
+  "Split milestone saved! Pushing the boundary today.",
+];
+
+export const REMINDER_MESSAGES = [
+  "Friendly reminder! Time to attend to your scheduled task.",
+  "Ding! Here is your scheduled reminder. You're right on track.",
+  "Reminder ping: Take a pause and check this item off your list.",
+  "Scheduled checkpoint arrived! Keep your flow going smoothly.",
+  "Your reminder has arrived: Stay mindful and take action.",
+  "Attention: Scheduled reminder ready for you. Great time management!",
+  "Ping! Here's that reminder you set earlier. Let's make it happen.",
+  "Gentle chime: Time for your upcoming task or check-in.",
+  "Reminder reached! One step at a time keeps productivity high.",
+  "Here is your alert! Clear your head and take care of this now.",
 ];
 
 export const RECURRING_MESSAGES = [
@@ -37,12 +50,14 @@ export const RECURRING_MESSAGES = [
   "Wellness ping: Small habits build immense energy. You're doing fantastic!",
 ];
 
-export function getRandomAlertMessage(type: 'timer' | 'stopwatch' | 'recurring'): string {
+export function getRandomAlertMessage(type: 'timer' | 'stopwatch' | 'reminder' | 'recurring'): string {
   const pool =
     type === 'timer'
       ? TIMER_MESSAGES
       : type === 'stopwatch'
       ? STOPWATCH_MESSAGES
+      : type === 'reminder'
+      ? REMINDER_MESSAGES
       : RECURRING_MESSAGES;
 
   const randomIndex = Math.floor(Math.random() * pool.length);

@@ -1,8 +1,8 @@
-import { CustomTimer, RecurringAlert, StopwatchMilestoneReminder } from '../types';
+import { CustomTimer, RecurringAlert, CustomReminder } from '../types';
 
-// Starts completely clean with no default timers or alerts until created by the user
+// Starts completely clean with no default items until created by user
 export const DEFAULT_TIMERS: CustomTimer[] = [];
 
-export const DEFAULT_STOPWATCH_REMINDERS: StopwatchMilestoneReminder[] = [];
+export const DEFAULT_REMINDERS: CustomReminder[] = [];
 
 export const DEFAULT_RECURRING_ALERTS: RecurringAlert[] = [];

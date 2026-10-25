@@ -1,7 +1,7 @@
 import React from 'react';
-import { Timer, StopCircle, BellRing, History, Volume2, VolumeX, Settings } from 'lucide-react';
+import { Timer, StopCircle, Bell, BellRing, History, Volume2, VolumeX, Settings } from 'lucide-react';
 
-export type ActiveTab = 'timers' | 'stopwatch' | 'recurring' | 'log';
+export type ActiveTab = 'timers' | 'stopwatch' | 'reminders' | 'recurring' | 'log';
 
 interface TopNavProps {
   activeTab: ActiveTab;
@@ -11,6 +11,7 @@ interface TopNavProps {
   onOpenSettings: () => void;
   unreadAlertCount: number;
   activeTimerCount: number;
+  activeReminderCount: number;
   isStopwatchRunning: boolean;
 }
 
@@ -22,6 +23,7 @@ export const TopNav: React.FC<TopNavProps> = ({
   onOpenSettings,
   unreadAlertCount,
   activeTimerCount,
+  activeReminderCount,
   isStopwatchRunning,
 }) => {
   return (
@@ -37,10 +39,10 @@ export const TopNav: React.FC<TopNavProps> = ({
       </div>
 
       {/* Zone 2: Navigation Links */}
-      <nav className="flex items-center gap-1 sm:gap-2">
+      <nav className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto no-scrollbar">
         <button
           onClick={() => onTabChange('timers')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-colors whitespace-nowrap shrink-0 ${
+          className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-colors whitespace-nowrap shrink-0 ${
             activeTab === 'timers'
               ? 'bg-zinc-800 text-zinc-100'
               : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/60'
@@ -57,7 +59,7 @@ export const TopNav: React.FC<TopNavProps> = ({
 
         <button
           onClick={() => onTabChange('stopwatch')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-colors whitespace-nowrap shrink-0 ${
+          className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-colors whitespace-nowrap shrink-0 ${
             activeTab === 'stopwatch'
               ? 'bg-zinc-800 text-zinc-100'
               : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/60'
@@ -71,28 +73,45 @@ export const TopNav: React.FC<TopNavProps> = ({
         </button>
 
         <button
+          onClick={() => onTabChange('reminders')}
+          className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-colors whitespace-nowrap shrink-0 ${
+            activeTab === 'reminders'
+              ? 'bg-zinc-800 text-zinc-100'
+              : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/60'
+          }`}
+        >
+          <Bell className="w-3.5 h-3.5" />
+          <span>Reminders</span>
+          {activeReminderCount > 0 && (
+            <span className="ml-1 text-[10px] font-mono font-medium px-1.5 py-0.2 bg-zinc-700 text-zinc-200 rounded">
+              {activeReminderCount}
+            </span>
+          )}
+        </button>
+
+        <button
           onClick={() => onTabChange('recurring')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-colors whitespace-nowrap shrink-0 ${
+          className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-colors whitespace-nowrap shrink-0 ${
             activeTab === 'recurring'
               ? 'bg-zinc-800 text-zinc-100'
               : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/60'
           }`}
         >
           <BellRing className="w-3.5 h-3.5" />
-          <span>Recurring Alerts</span>
+          <span className="hidden md:inline">Recurring Alerts</span>
+          <span className="md:hidden">Recurring</span>
         </button>
 
         <button
           onClick={() => onTabChange('log')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-colors whitespace-nowrap shrink-0 ${
+          className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-colors whitespace-nowrap shrink-0 ${
             activeTab === 'log'
               ? 'bg-zinc-800 text-zinc-100'
               : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/60'
           }`}
         >
           <History className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">Alert History</span>
-          <span className="sm:hidden">History</span>
+          <span>History</span>
           {unreadAlertCount > 0 && (
             <span className="ml-1 text-[10px] font-mono px-1.5 py-0.2 bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded">
               {unreadAlertCount}

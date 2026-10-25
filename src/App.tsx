@@ -7,7 +7,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   CustomTimer,
   StopwatchState,
-  StopwatchMilestoneReminder,
+  CustomReminder,
   RecurringAlert,
   TriggeredAlert,
   AudioSettings,
@@ -15,7 +15,7 @@ import {
 } from './types';
 import {
   DEFAULT_TIMERS,
-  DEFAULT_STOPWATCH_REMINDERS,
+  DEFAULT_REMINDERS,
   DEFAULT_RECURRING_ALERTS,
 } from './utils/defaults';
 import { playTone, sendBrowserNotification } from './utils/sound';
@@ -24,6 +24,7 @@ import { getRandomAlertMessage } from './utils/messages';
 import { TopNav, ActiveTab } from './components/TopNav';
 import { TimersView } from './components/TimersView';
 import { StopwatchView } from './components/StopwatchView';
+import { RemindersView } from './components/RemindersView';
 import { RecurringAlertsView } from './components/RecurringAlertsView';
 import { AlertLogView } from './components/AlertLogView';
 import { AlarmBanner } from './components/AlarmBanner';
@@ -35,6 +36,7 @@ import { AudioSettingsModal } from './components/AudioSettingsModal';
 const STORAGE_KEYS = {
   TIMERS: 'chronos_timers_v2',
   STOPWATCH: 'chronos_stopwatch_v2',
+  REMINDERS: 'chronos_reminders_v2',
   RECURRING: 'chronos_recurring_v2',
   LOGS: 'chronos_logs_v2',
   SETTINGS: 'chronos_settings_v2',
@@ -52,7 +54,7 @@ if (typeof window !== 'undefined') {
 export default function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('timers');
 
-  // Timers State
+  // Timers State (Empty clean slate by default)
   const [timers, setTimers] = useState<CustomTimer[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.TIMERS);
@@ -61,16 +63,18 @@ export default function App() {
     return DEFAULT_TIMERS;
   });
 
-  // Stopwatch State
+  // Stopwatch State (Pure stopwatch separated from reminders)
   const [stopwatch, setStopwatch] = useState<StopwatchState>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.STOPWATCH);
       if (saved) {
         const parsed = JSON.parse(saved);
         return {
-          ...parsed,
+          elapsedMs: parsed.elapsedMs || 0,
           isRunning: false,
           startTime: null,
+          accumulatedMs: parsed.accumulatedMs || 0,
+          laps: parsed.laps || [],
         };
       }
     } catch {}
@@ -80,8 +84,16 @@ export default function App() {
       startTime: null,
       accumulatedMs: 0,
       laps: [],
-      reminders: DEFAULT_STOPWATCH_REMINDERS,
     };
+  });
+
+  // Reminders State (Dedicated separate reminders)
+  const [reminders, setReminders] = useState<CustomReminder[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.REMINDERS);
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return DEFAULT_REMINDERS;
   });
 
   // Recurring Alerts State
@@ -140,6 +152,10 @@ export default function App() {
   }, [stopwatch]);
 
   useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.REMINDERS, JSON.stringify(reminders));
+  }, [reminders]);
+
+  useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.RECURRING, JSON.stringify(recurringAlerts));
   }, [recurringAlerts]);
 
@@ -185,7 +201,7 @@ export default function App() {
             if (perm === 'granted') {
               setAudioSettings((s) => ({ ...s, browserNotificationsEnabled: true }));
               sendBrowserNotification('Chronos Alerts Activated', {
-                body: 'Your computer will now receive real-time alerts for all timers, stopwatch milestones, and recurring checks.',
+                body: 'Your computer will now receive real-time alerts for all timers, reminders, and recurring checks.',
               });
             }
           })
@@ -244,15 +260,10 @@ export default function App() {
     return () => clearInterval(interval);
   }, [timers, triggerAlert, focusTimer]);
 
-  // 2. Stopwatch High-Precision Engine & Milestone Monitor
+  // 2. Stopwatch High-Precision Engine (Pure & Focused)
   const stopwatchStartTimeRef = useRef<number | null>(null);
   const stopwatchAccumulatedRef = useRef<number>(0);
   const stopwatchRunningRef = useRef<boolean>(false);
-  const stopwatchRemindersRef = useRef(stopwatch.reminders);
-
-  useEffect(() => {
-    stopwatchRemindersRef.current = stopwatch.reminders;
-  }, [stopwatch.reminders]);
 
   useEffect(() => {
     if (!stopwatch.isRunning) {
@@ -272,48 +283,6 @@ export default function App() {
       const delta = now - (stopwatchStartTimeRef.current || now);
       const currentElapsed = stopwatchAccumulatedRef.current + delta;
 
-      // Check milestone reminders
-      stopwatchRemindersRef.current.forEach((reminder) => {
-        if (!reminder.enabled) return;
-
-        if (reminder.type === 'single') {
-          // Check if crossed targetMs
-          if (
-            currentElapsed >= reminder.targetMs &&
-            (!reminder.lastTriggeredMs || reminder.lastTriggeredMs < reminder.targetMs)
-          ) {
-            reminder.lastTriggeredMs = currentElapsed;
-            const randomMsg = getRandomAlertMessage('stopwatch');
-            triggerAlert({
-              sourceType: 'stopwatch',
-              sourceId: reminder.id,
-              title: `Stopwatch Milestone: ${reminder.label}`,
-              message: randomMsg,
-              soundTone: reminder.soundTone,
-            });
-          }
-        } else if (reminder.type === 'interval' && reminder.intervalMs) {
-          // Recurring cadence during stopwatch run
-          const interval = reminder.intervalMs;
-          const currentLapCount = Math.floor(currentElapsed / interval);
-          const lastLapCount = reminder.lastTriggeredMs
-            ? Math.floor(reminder.lastTriggeredMs / interval)
-            : 0;
-
-          if (currentLapCount > lastLapCount && currentLapCount > 0) {
-            reminder.lastTriggeredMs = currentElapsed;
-            const randomMsg = getRandomAlertMessage('stopwatch');
-            triggerAlert({
-              sourceType: 'stopwatch',
-              sourceId: reminder.id,
-              title: `Stopwatch Cadence: ${reminder.label}`,
-              message: randomMsg,
-              soundTone: reminder.soundTone,
-            });
-          }
-        }
-      });
-
       setStopwatch((prev) => ({
         ...prev,
         elapsedMs: currentElapsed,
@@ -328,9 +297,51 @@ export default function App() {
       cancelAnimationFrame(animId);
       stopwatchRunningRef.current = false;
     };
-  }, [stopwatch.isRunning, triggerAlert]);
+  }, [stopwatch.isRunning]);
 
-  // 3. Recurring Alerts Engine (checks every 2 seconds)
+  // 3. Reminders Engine (Checks every 1000ms against targetTimestamp)
+  useEffect(() => {
+    const hasActiveReminders = reminders.some((r) => r.isEnabled && !r.triggered);
+    if (!hasActiveReminders) return;
+
+    const interval = setInterval(() => {
+      const now = Date.now();
+      setReminders((currentReminders) => {
+        let changed = false;
+        const updated = currentReminders.map((reminder) => {
+          if (!reminder.isEnabled || reminder.triggered) return reminder;
+
+          if (now >= reminder.targetTimestamp) {
+            changed = true;
+            const randomMsg = getRandomAlertMessage('reminder');
+            const alertText = reminder.note
+              ? `${reminder.note} · ${randomMsg}`
+              : randomMsg;
+
+            triggerAlert({
+              sourceType: 'reminder',
+              sourceId: reminder.id,
+              title: `Reminder: ${reminder.title}`,
+              message: alertText,
+              soundTone: reminder.soundTone,
+            });
+
+            return {
+              ...reminder,
+              triggered: true,
+            };
+          }
+          return reminder;
+        });
+
+        return changed ? updated : currentReminders;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [reminders, triggerAlert]);
+
+  // 4. Recurring Alerts Engine (checks every 2 seconds)
   useEffect(() => {
     const hasEnabledAlerts = recurringAlerts.some((a) => a.isEnabled);
     if (!hasEnabledAlerts) return;
@@ -386,7 +397,7 @@ export default function App() {
       return;
     }
 
-    document.title = 'Chronos — Minimalist Timers, Stopwatch & Recurring Alerts';
+    document.title = 'Chronos — Minimalist Timers, Stopwatch & Reminders';
   }, [timers, stopwatch.isRunning, stopwatch.elapsedMs]);
 
   // Timer Handlers
@@ -395,7 +406,6 @@ export default function App() {
       prev.map((t) => {
         if (t.id === id) {
           const nextState = !t.isRunning;
-          // If starting from 0, reset first
           const rem = t.remainingSeconds <= 0 ? t.totalDurationSeconds : t.remainingSeconds;
           return { ...t, isRunning: nextState, remainingSeconds: rem };
         }
@@ -470,15 +480,13 @@ export default function App() {
   };
 
   const handleResetStopwatch = () => {
-    setStopwatch((prev) => ({
-      ...prev,
+    setStopwatch({
       elapsedMs: 0,
       isRunning: false,
       startTime: null,
       accumulatedMs: 0,
       laps: [],
-      reminders: prev.reminders.map((r) => ({ ...r, lastTriggeredMs: undefined })),
-    }));
+    });
   };
 
   const handleLapStopwatch = () => {
@@ -501,29 +509,57 @@ export default function App() {
     });
   };
 
-  const handleToggleStopwatchReminder = (id: string) => {
-    setStopwatch((prev) => ({
-      ...prev,
-      reminders: prev.reminders.map((r) => (r.id === id ? { ...r, enabled: !r.enabled } : r)),
-    }));
+  // Reminders Handlers
+  const handleToggleReminder = (id: string) => {
+    setReminders((prev) =>
+      prev.map((r) => {
+        if (r.id === id) {
+          const nextEnabled = !r.isEnabled;
+          return {
+            ...r,
+            isEnabled: nextEnabled,
+            // If re-enabling after it was triggered, reschedule for duration
+            triggered: nextEnabled ? false : r.triggered,
+            targetTimestamp:
+              nextEnabled && r.triggered && r.durationMinutes
+                ? Date.now() + r.durationMinutes * 60 * 1000
+                : r.targetTimestamp,
+          };
+        }
+        return r;
+      })
+    );
   };
 
-  const handleAddStopwatchReminder = (data: Omit<StopwatchMilestoneReminder, 'id'>) => {
-    const newReminder: StopwatchMilestoneReminder = {
+  const handleDeleteReminder = (id: string) => {
+    setReminders((prev) => prev.filter((r) => r.id !== id));
+  };
+
+  const handleAddReminder = (
+    data: Omit<CustomReminder, 'id' | 'createdAt' | 'triggered'>
+  ) => {
+    const newReminder: CustomReminder = {
       ...data,
-      id: `sw-rem-${Date.now()}`,
+      id: `rem-${Date.now()}`,
+      createdAt: Date.now(),
+      triggered: false,
     };
-    setStopwatch((prev) => ({
-      ...prev,
-      reminders: [...prev.reminders, newReminder],
-    }));
+    setReminders((prev) => [newReminder, ...prev]);
   };
 
-  const handleDeleteStopwatchReminder = (id: string) => {
-    setStopwatch((prev) => ({
-      ...prev,
-      reminders: prev.reminders.filter((r) => r.id !== id),
-    }));
+  const handleSnoozeReminder = (id: string, minutes: number) => {
+    setReminders((prev) =>
+      prev.map((r) =>
+        r.id === id
+          ? {
+              ...r,
+              targetTimestamp: Date.now() + minutes * 60 * 1000,
+              triggered: false,
+              isEnabled: true,
+            }
+          : r
+      )
+    );
   };
 
   // Recurring Alerts Handlers
@@ -583,7 +619,6 @@ export default function App() {
     setActiveAlarms((prev) => prev.filter((a) => a.id !== alert.id));
 
     if (alert.sourceType === 'timer') {
-      // Add minutes to the timer and restart
       const secs = minutes * 60;
       setTimers((prev) =>
         prev.map((t) =>
@@ -592,8 +627,9 @@ export default function App() {
             : t
         )
       );
+    } else if (alert.sourceType === 'reminder') {
+      handleSnoozeReminder(alert.sourceId, minutes);
     } else if (alert.sourceType === 'recurring') {
-      // Reschedule recurring alert
       setRecurringAlerts((prev) =>
         prev.map((a) =>
           a.id === alert.sourceId
@@ -611,10 +647,11 @@ export default function App() {
 
   const unreadAlertCount = alertLogs.filter((l) => !l.acknowledged).length;
   const runningTimersCount = timers.filter((t) => t.isRunning).length;
+  const activeRemindersCount = reminders.filter((r) => r.isEnabled && !r.triggered).length;
 
   return (
     <div className="min-h-screen bg-[#09090b] text-zinc-100 flex flex-col font-sans selection:bg-zinc-800 selection:text-zinc-100">
-      {/* Top Bar Contract Navigation */}
+      {/* Top Bar Navigation */}
       <TopNav
         activeTab={activeTab}
         onTabChange={setActiveTab}
@@ -623,6 +660,7 @@ export default function App() {
         onOpenSettings={() => setIsSettingsOpen(true)}
         unreadAlertCount={unreadAlertCount}
         activeTimerCount={runningTimersCount}
+        activeReminderCount={activeRemindersCount}
         isStopwatchRunning={stopwatch.isRunning}
       />
 
@@ -663,9 +701,21 @@ export default function App() {
             onPause={handlePauseStopwatch}
             onReset={handleResetStopwatch}
             onLap={handleLapStopwatch}
-            onToggleReminder={handleToggleStopwatchReminder}
-            onAddReminder={handleAddStopwatchReminder}
-            onDeleteReminder={handleDeleteStopwatchReminder}
+          />
+        )}
+
+        {activeTab === 'reminders' && (
+          <RemindersView
+            reminders={reminders}
+            reminderLogs={alertLogs.filter((l) => l.sourceType === 'reminder')}
+            onToggleReminder={handleToggleReminder}
+            onDeleteReminder={handleDeleteReminder}
+            onAddReminder={handleAddReminder}
+            onSnoozeReminder={handleSnoozeReminder}
+            onAcknowledgeLog={handleAcknowledgeAlert}
+            onClearReminderLogs={() =>
+              setAlertLogs((prev) => prev.filter((l) => l.sourceType !== 'reminder'))
+            }
           />
         )}
 

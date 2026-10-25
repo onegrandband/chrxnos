@@ -24,25 +24,26 @@ export interface LapTime {
   timestamp: number;
 }
 
-export interface StopwatchMilestoneReminder {
-  id: string;
-  label: string;
-  type: 'single' | 'interval'; // single = alert once at targetMs, interval = alert every intervalMs (e.g. every 5 min)
-  targetMs: number; // for single: e.g. 300,000 ms (5 min)
-  intervalMs?: number; // for interval: e.g. 60,000 ms (every 1 min)
-  soundTone: SoundTone;
-  enabled: boolean;
-  lastTriggeredLapIndex?: number;
-  lastTriggeredMs?: number;
-}
-
 export interface StopwatchState {
   elapsedMs: number;
   isRunning: boolean;
   startTime: number | null;
   accumulatedMs: number;
   laps: LapTime[];
-  reminders: StopwatchMilestoneReminder[];
+}
+
+export interface CustomReminder {
+  id: string;
+  title: string;
+  note?: string;
+  type: 'duration' | 'target-time'; // duration (e.g. in 15 mins) or target-time (e.g. at 14:30)
+  targetTimestamp: number;
+  durationMinutes?: number;
+  targetTimeStr?: string;
+  soundTone: SoundTone;
+  isEnabled: boolean;
+  createdAt: number;
+  triggered: boolean;
 }
 
 export interface RecurringAlert {
@@ -61,7 +62,7 @@ export interface RecurringAlert {
 
 export interface TriggeredAlert {
   id: string;
-  sourceType: 'timer' | 'stopwatch' | 'recurring';
+  sourceType: 'timer' | 'stopwatch' | 'reminder' | 'recurring';
   sourceId: string;
   title: string;
   message: string;
